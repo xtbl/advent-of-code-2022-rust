@@ -12,7 +12,7 @@ fn get_lines_from_file(filename: impl AsRef<Path>) -> Result<Vec<String>> {
 }
 
 fn get_input_file_name() -> &'static str {
-  "input.txt"
+  "mock.txt"
 }
 
 fn get_most_calories(lines: &Vec<String>) -> i32 {
@@ -23,21 +23,26 @@ fn get_most_calories(lines: &Vec<String>) -> i32 {
         if line != "" {
             let line_int: i32 = line.parse().unwrap();
             current_accum = current_accum + line_int;
-            println!("--- current_accum");
-            println!("{:?}", current_accum);
         } else {
             accums.push(current_accum);
             current_accum = 0;
         }
     }
-    println!("--- accums");
-    println!("{:?}", accums);
+    if current_accum != 0 {
+        accums.push(current_accum);
+    }
+
+    accums.sort();
+    accums.reverse();
+    accums.resize(3, 0);
 
     let most_calories: i32 = match accums.iter().max() {
         Some(val) => *val,
         None => panic!("Error getting most calories"),
     };
-    most_calories
+    // most_calories
+    let top_3: i32 = accums.iter().sum();
+    top_3
 }
 
 #[cfg(test)]
@@ -51,9 +56,6 @@ mod tests {
             Ok(line) => line,
             Err(error) => panic!("Error getting line {:?}", error),
         };
-        println!("--- lines");
-        println!("{:?}", lines);
-        
         let most_calories = get_most_calories(&lines);
         assert_eq!(most_calories, 24000);
     }
@@ -64,8 +66,6 @@ mod tests {
             Ok(line) => line,
             Err(error) => panic!("Error getting line {:?}", error),
         };
-        println!("--- lines");
-        println!("{:?}", lines);
         let selected_line = &lines[0 as usize];
         assert_eq!(selected_line, "1000");
     }
