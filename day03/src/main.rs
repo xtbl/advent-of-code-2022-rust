@@ -8,12 +8,11 @@ fn main() {
     println!("Day 3: Rucksack Reorganization");
 }
 
-fn get_lines_from_file(filename: impl AsRef<Path>) -> Result<Vec<String>> {
-    BufReader::new(File::open(filename)?).lines().collect()
-}
-
-fn get_input_file_name() -> &'static str {
-  "mock.txt"
+fn get_char_priority(to_find: char) -> i32 {
+    let mut a_z = ('a'..='z').into_iter().collect::<Vec<char>>();
+    let A_Z = ('A'..='Z').into_iter().collect::<Vec<char>>();
+    a_z.extend(&A_Z);
+    a_z.iter().position(|x| *x == to_find).unwrap() as i32 + 1
 }
 
 fn get_duplicated_in_both(half_1: &str, half_2: &str) -> char {
@@ -25,32 +24,31 @@ fn get_duplicated_in_both(half_1: &str, half_2: &str) -> char {
             }
 
         }
-    // duplicates = half_2.chars().filter(|h2| h1 == *h2).collect();
-    // println!("--- duplicates: {:?}", duplicates);
-
     }
     *duplicates.index(0)
 }
 
-fn get_char_priority(to_find: char) -> i32 {
-    let mut a_z = ('a'..='z').into_iter().collect::<Vec<char>>();
-    let A_Z = ('A'..='Z').into_iter().collect::<Vec<char>>();
-    a_z.extend(&A_Z);
-    a_z.iter().position(|x| *x == to_find).unwrap() as i32 + 1
+fn get_same_in_lines(line_1: &str, line_2: &str, line_3: &str) -> char {
+    let mut same = vec![];
+    for h1 in line_1.chars() {
+        for h2 in line_2.chars() {
+            for h3 in line_3.chars() {
+                if h1 == h2 && h2 == h3 {
+                    same.push(h1);
+                }
+            }
+        }
+    }
+    *same.index(0)
 }
 
-// split in halves
-// find item duplicated in both halves
-// get item priority
-// Lowercase item types a through z have priorities 1 through 26.
-// Uppercase item types A through Z have priorities 27 through 52.
-// find duplicated item priority
-// sum duplicated items priorities
+fn get_lines_from_file(filename: impl AsRef<Path>) -> Result<Vec<String>> {
+    BufReader::new(File::open(filename)?).lines().collect()
+}
 
-// part 02
-// window 3 to group lines
-// find same char in the 3 lines
-// find priorities accum
+fn get_input_file_name() -> &'static str {
+  "mock.txt"
+}
 
 
 #[cfg(test)]
@@ -58,8 +56,18 @@ mod tests {
 
     use super::*;
 
+    #[test]
+    fn test_get_part_02_result() {
+        let lines = match get_lines_from_file(get_input_file_name()) {
+            Ok(line) => line,
+            Err(error) => panic!("Error getting line {:?}", error),
+        };
 
-
+        let accum = lines.chunks(3).fold(0, |acc, group| 
+            acc + get_char_priority(get_same_in_lines(&group[0], &group[1], &group[2]))
+        );
+        assert_eq!(accum, 70);
+    }
 
     #[test]
     fn test_get_part_01_result() {
@@ -71,7 +79,6 @@ mod tests {
         let accum = lines.iter().fold(0, |acc, line| {
             let (half_1, half_2) = line.split_at(line.len()/2);
             let duplicated = get_duplicated_in_both(half_1, half_2);
-            println!("--- duplicated: {:?}", duplicated);
             acc + get_char_priority(duplicated)
         });
         assert_eq!(accum, 157);
