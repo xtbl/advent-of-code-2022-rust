@@ -128,13 +128,112 @@ fn parse_string_to_crate(input_chunk: &str) -> Option<String> {
     }
 }
 
-fn fill_crates(lines: Vec<String>) -> Vec<Vec<String>> {
-    vec![vec![String::from("A"), String::from("B")]]
+fn fill_crates(lines: &Vec<String>) -> (Vec<Vec<String>>, Vec<Vec<String>>, Vec<Vec<String>>) {
+    // vec![vec![String::from("A"), String::from("B")]]
+    let mut vec_container:Vec<Vec<String>>  = vec![];
+    let mut vec_num_columns:Vec<Vec<String>> = vec![];
+    let mut vec_instructions:Vec<Vec<String>>  = vec![];
+
+    let mut num_lines_was_parsed = false;
+
+    //TODO: this is the first line, push into vecs, then loop to do the process for each line
+    let line_0 = parse_line_into_chunks(&lines[0 as usize]);
+    let is_nums_line = |line_vec:Vec<String>| {
+        let result = match line_vec.len() {
+            0 => false,
+            _ => {
+                let line_char: Vec<char> = line_vec[0].chars().collect();
+                line_char.first().unwrap_or(&'a').is_numeric()
+            }
+        };
+        result
+    };
+
+    for line_num in 0..lines.len() {
+        // let line_0 = parse_line_into_chunks(&lines[0 as usize]);
+        let current_line = parse_line_into_chunks(&lines[line_num as usize]);
+        let line_to_crates:Vec<String>  = current_line.iter().map(|col| {
+            let result = match parse_string_to_crate(col) {
+                Some(val) => val,
+                None => String::from("")
+            };
+            result
+        }).collect();
+
+        //TODO:
+        // return tuple with columns, num columns and instructions
+        if !is_nums_line(line_to_crates.clone()) && !num_lines_was_parsed {
+            vec_container.push(line_to_crates.clone());
+        }
+
+        if is_nums_line(line_to_crates.clone()) {
+            println!("IS NUMS LINE: line_to_crates");
+            println!("---------- {:?}", line_to_crates);
+            vec_num_columns.push(line_to_crates);
+            num_lines_was_parsed = true;
+            break;
+        }   
+
+        if num_lines_was_parsed {
+            vec_instructions.push(line_to_crates);
+        }
+    }
+
+    println!("---------- vec_container");
+    println!("---------- {:?}", vec_container);
+    println!("---------- vec_container");
+    // non iterative
+    println!("--- line_0 {:?}", line_0);
+    let line_to_crates:Vec<String>  = line_0.iter().map(|col| {
+        let result = match parse_string_to_crate(col) {
+            Some(val) => val,
+            None => String::from("")
+        };
+        result
+    }).collect();
+    println!("--- line_to_crates {:?}", line_to_crates);
+
+    
+
+    vec![
+        // vec![String::from("Z"), String::from("N")],
+        line_to_crates,
+        vec![String::from("M"), String::from("C"), String::from("D")],
+        vec![String::from("P")]
+    ];
+
+    (vec_container, vec_num_columns, vec_instructions)
 }
+
+// TODO: rotate vector
+// https://stackoverflow.com/questions/42519/how-do-you-rotate-a-two-dimensional-array 
+fn rotate_vectors_to_cols(input_to_rotate: &Vec<Vec<String>>) -> Vec<Vec<String>> {
+//     0,0, 0,1
+//     1,0  1,1
+//     ["A", "B"]
+//     ["C", "D"]
+// 0,0 -> 0,1 
+// 0,1 -> 1,1
+// 1,1 -> 1,0
+// 1,0 -> 0,0
+
+// col,row -> col,row+1
+// col,row+1 -> col+1,row+1
+// col+1,row+1 -> col+1,row
+// col+1,row -> col,row
+//     ["C", "A"]
+//     ["D", "B"]
+
+    
+    vec![vec![String::from("D")]]
+}
+
 
 // TODO: parse line into stacks
 // iterate vec with chunks
 // if Some push item, else skip position
+// check char.is_numeric() to know if that's the first line separator. also could be used to 
+// the amount of columns
 
 #[cfg(test)]
 mod tests {
@@ -155,9 +254,33 @@ mod tests {
         // parse chunks to columns
         assert_eq!(None, parse_string_to_crate("    "));
         assert_eq!(Some(String::from("D")), parse_string_to_crate("[D] "));
+        assert_eq!(Some(String::from("D")), parse_string_to_crate(" [D]"));
         assert_eq!(None, parse_string_to_crate("   "));
         assert_eq!(Some(String::from("V")), parse_string_to_crate("[V] "));
 
+        // let expected_vec = vec![
+        //     vec!["Z", "N", ""],
+        //     vec!["M", "C", "D"],
+        //     vec!["P", "", ""]
+        // ];
+        let expected_vec = vec![
+            vec!["Z", "N", ""],
+            vec!["M", "C", "D"],
+            vec!["P", "", ""]
+        ];
+
+        let result = fill_crates(&lines);
+
+        let rotate_input = vec![
+            vec![String::from(""), String::from("D"), String::from("")], 
+            vec![String::from("N"), String::from("C"), String::from("")], 
+            vec![String::from("Z"), String::from("M"), String::from("P")]
+        ];
+        let rotate_vectors_to_cols = rotate_vectors_to_cols(&rotate_input);
+
+        assert_eq!(expected_vec, rotate_vectors_to_cols);
+
+        assert_eq!(expected_vec[0], result.0[0]);
     }
 
     // #[test]
